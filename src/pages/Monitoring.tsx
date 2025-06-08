@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Card,
@@ -20,23 +21,53 @@ import Squares from '../components/Squares';
 
 const Grid = MuiGrid as any;
 
-const topGames = [
-  { name: 'The Last of Us', score: 98, platform: 'PlayStation' },
-  { name: 'God of War', score: 95, platform: 'PlayStation' },
-  { name: 'Zelda: Breath of the Wild', score: 97, platform: 'Nintendo' },
-  { name: 'Red Dead Redemption 2', score: 96, platform: 'PlayStation' },
-  { name: 'Elden Ring', score: 94, platform: 'PC' },
-];
+type Game = {
+  id?: string | number;
+  name: string;
+  platform: string;
+  score: number;
+};
 
-const platformStats = [
-  { platform: 'PlayStation', count: 15, totalScore: 1450 },
-  { platform: 'PC', count: 12, totalScore: 1150 },
-  { platform: 'Nintendo', count: 8, totalScore: 780 },
-  { platform: 'Xbox', count: 6, totalScore: 580 },
-  { platform: 'Mobile', count: 4, totalScore: 320 },
-];
+type PlatformStat = {
+  platform: string;
+  count: number;
+  totalScore: number;
+};
+
+type Summary = {
+  totalGames: number;
+  totalHoursPlayed: number;
+};
 
 export default function Monitoring() {
+  const [topGames, setTopGames] = useState<Game[]>([]);
+  const [platformStats, setPlatformStats] = useState<PlatformStat[]>([]);
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetch("http://localhost:8000/api/top-games").then(r => r.json()),
+      fetch("http://localhost:8000/api/platform-stats").then(r => r.json()),
+      fetch("http://localhost:8000/api/summary").then(r => r.json()),
+    ])
+      .then(([topGamesData, platformStatsData, summaryData]) => {
+        setTopGames(topGamesData);
+        setPlatformStats(platformStatsData);
+        setSummary(summaryData);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error al cargar datos:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return <Typography>Cargando...</Typography>;
+  }
+
   return (
     <>
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
@@ -61,7 +92,7 @@ export default function Monitoring() {
                 </Typography>
                 <List>
                   {topGames.map((game, index) => (
-                    <Box key={game.name}>
+                    <Box key={game.id || game.name}>
                       <ListItem>
                         <ListItemAvatar>
                           <Avatar sx={{ bgcolor: 'primary.main' }}>
@@ -119,7 +150,7 @@ export default function Monitoring() {
                       <Avatar sx={{ bgcolor: 'success.main', mx: 'auto', mb: 1 }}>
                         <EmojiEvents />
                       </Avatar>
-                      <Typography variant="h6">45</Typography>
+                      <Typography variant="h6">{summary ? summary.totalGames : '-'}</Typography>
                       <Typography color="text.secondary">Juegos Totales</Typography>
                     </Box>
                   </Grid>
@@ -128,7 +159,7 @@ export default function Monitoring() {
                       <Avatar sx={{ bgcolor: 'info.main', mx: 'auto', mb: 1 }}>
                         <Timeline />
                       </Avatar>
-                      <Typography variant="h6">320</Typography>
+                      <Typography variant="h6">{summary ? summary.totalHoursPlayed : '-'}</Typography>
                       <Typography color="text.secondary">Horas Jugadas</Typography>
                     </Box>
                   </Grid>
@@ -137,7 +168,7 @@ export default function Monitoring() {
                       <Avatar sx={{ bgcolor: 'warning.main', mx: 'auto', mb: 1 }}>
                         <SportsEsports />
                       </Avatar>
-                      <Typography variant="h6">5</Typography>
+                      <Typography variant="h6">{platformStats.length}</Typography>
                       <Typography color="text.secondary">Plataformas</Typography>
                     </Box>
                   </Grid>
@@ -149,4 +180,4 @@ export default function Monitoring() {
       </Box>
     </>
   );
-} 
+}

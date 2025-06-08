@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Grid as MuiGrid, Typography, Avatar, Box } from '@mui/material';
 import { EmojiEvents, SportsEsports, Timeline } from '@mui/icons-material';
 import Hyperspeed from '../components/Hyperspeed';
@@ -5,7 +6,31 @@ import PixelCard from '../components/PixelCard';
 
 const Grid = MuiGrid as any;
 
+interface Summary {
+  totalGames: number;
+  totalScore: number;
+  totalHoursPlayed: number;
+  bestGame: string;
+  bestScore: number;
+  currentGame: string;
+  lastCompleted: {
+    name: string;
+    lastPlayed: string;
+  } | null;
+  completedCount: number;
+  inProgressCount: number;
+}
+
 export default function Dashboard() {
+  const [summary, setSummary] = useState<Summary | null>(null);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/summary')
+      .then((res) => res.json())
+      .then((data) => setSummary(data))
+      .catch((err) => console.error('Error fetching summary:', err));
+  }, []);
+
   return (
     <>
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
@@ -66,86 +91,59 @@ export default function Dashboard() {
               Mi Perfil 
             </Typography>
           </Grid>
+
           <Grid item xs={12} md={6} lg={4}>
             <PixelCard variant="pink">
-              <Box sx={{ 
-                position: 'absolute',
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                width: '100%',
-                color: 'white'
-              }}>
+              <Box sx={{ position: 'absolute', p: 2, display: 'flex', flexDirection: 'column', height: '100%', width: '100%', color: 'white' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
                     <EmojiEvents />
                   </Avatar>
-                  <Typography variant="h6">
-                    Juegos Completados
-                  </Typography>
+                  <Typography variant="h6">Juegos Completados</Typography>
                 </Box>
                 <Typography variant="h3" sx={{ textAlign: 'center', my: 2 }}>
-                  12
+                  {summary?.completedCount ?? '-'}
                 </Typography>
                 <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-                  Último juego completado: The Legend of Zelda
+                  Último juego completado: {summary?.lastCompleted?.name ?? 'N/A'}
                 </Typography>
               </Box>
             </PixelCard>
           </Grid>
+
           <Grid item xs={12} md={6} lg={4}>
             <PixelCard variant="blue">
-              <Box sx={{ 
-                position: 'absolute',
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                width: '100%',
-                color: 'white'
-              }}>
+              <Box sx={{ position: 'absolute', p: 2, display: 'flex', flexDirection: 'column', height: '100%', width: '100%', color: 'white' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <Avatar sx={{ bgcolor: 'secondary.main', mr: 2 }}>
                     <SportsEsports />
                   </Avatar>
-                  <Typography variant="h6">
-                    Juegos en Progreso
-                  </Typography>
+                  <Typography variant="h6">Juegos en Progreso</Typography>
                 </Box>
                 <Typography variant="h3" sx={{ textAlign: 'center', my: 2 }}>
-                  5
+                  {summary?.inProgressCount ?? '-'}
                 </Typography>
                 <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-                  Juego actual: God of War
+                  Juego actual: {summary?.currentGame ?? 'N/A'}
                 </Typography>
               </Box>
             </PixelCard>
           </Grid>
+
           <Grid item xs={12} md={6} lg={4}>
             <PixelCard variant="yellow">
-              <Box sx={{ 
-                position: 'absolute',
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                width: '100%',
-                color: 'white'
-              }}>
+              <Box sx={{ position: 'absolute', p: 2, display: 'flex', flexDirection: 'column', height: '100%', width: '100%', color: 'white' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <Avatar sx={{ bgcolor: 'success.main', mr: 2 }}>
                     <Timeline />
                   </Avatar>
-                  <Typography variant="h6">
-                    Puntaje Total
-                  </Typography>
+                  <Typography variant="h6">Puntaje Total</Typography>
                 </Box>
                 <Typography variant="h3" sx={{ textAlign: 'center', my: 2 }}>
-                  8,750
+                  {summary?.totalScore ?? '-'}
                 </Typography>
                 <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-                  Mejor puntaje: 1,200 (The Last of Us)
+                  Mejor puntaje: {summary?.bestScore ?? '-'} ({summary?.bestGame ?? 'N/A'})
                 </Typography>
               </Box>
             </PixelCard>
@@ -154,4 +152,4 @@ export default function Dashboard() {
       </Box>
     </>
   );
-} 
+}

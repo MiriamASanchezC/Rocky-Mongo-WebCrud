@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -14,6 +14,10 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import axios from 'axios';
+
+const API = 'http://localhost:8000/api';
+
 type OperationType = 'insert' | 'update' | 'delete';
 
 interface Game {
@@ -25,6 +29,8 @@ interface Game {
   hoursPlayed: number;
   lastPlayed: string;
 }
+//   hola mundo 
+
 
 export default function Operations() {
   const [operationType, setOperationType] = useState<OperationType>('insert');
@@ -36,23 +42,50 @@ export default function Operations() {
     hoursPlayed: 0,
     lastPlayed: new Date().toISOString().split('T')[0],
   });
+  const [searchName, setSearchName] = useState('');
+  const [matchingGames, setMatchingGames] = useState<Game[]>([]);
+
+  useEffect(() => {
+    if ((operationType === 'update' || operationType === 'delete') && searchName.length >= 2) {
+      axios.get(`${API}/games/search?name=${searchName}`)
+        .then(res => setMatchingGames(res.data))
+        .catch(() => setMatchingGames([]));
+    } else {
+      setMatchingGames([]);
+    }
+  }, [searchName, operationType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aquí irá la lógica para enviar la operación al backend
-    console.log({
-      operationType,
-      game,
-    });
+    try {
+      if (operationType === 'insert') {
+        await axios.post(`${API}/games`, game);
+        alert('Juego agregado exitosamente');
+      } else if (operationType === 'update' && game.id) {
+        await axios.put(`${API}/games/${game.id}`, game);
+        alert('Juego actualizado');
+      } else if (operationType === 'delete' && game.id) {
+        await axios.delete(`${API}/games/${game.id}`);
+        alert('Juego eliminado');
+      }
+    } catch (err) {
+      alert('Ocurrió un error');
+    }
   };
 
   const handleChange = (field: keyof Game) => (
     e: React.ChangeEvent<HTMLInputElement | { value: unknown }>
   ) => {
-    const value = e.target.type === 'checkbox' 
-      ? (e.target as HTMLInputElement).checked 
-      : e.target.value;
+    const value =
+      e.target.type === 'checkbox'
+        ? (e.target as HTMLInputElement).checked
+        : e.target.value;
     setGame(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleGameSelect = (e: React.ChangeEvent<{ value: unknown }>) => {
+    const selectedGame = matchingGames.find(g => g.id === e.target.value);
+    if (selectedGame) setGame(selectedGame);
   };
 
   return (
@@ -68,13 +101,73 @@ export default function Operations() {
               <Select
                 value={operationType}
                 label="Tipo de Operación"
-                onChange={(e) => setOperationType(e.target.value as OperationType)}
+                onChange={(e) => {
+                  setOperationType(e.target.value as OperationType);
+                  setGame({
+                    name: '',
+                    platform: '',
+                    score: 0,
+                    completed: false,
+                    hoursPlayed: 0,
+                    lastPlayed: new Date().toISOString().split('T')[0],
+                  });
+                  setSearchName('');
+                  setMatchingGames([]);
+                }}
               >
                 <MenuItem value="insert">Agregar Juego</MenuItem>
                 <MenuItem value="update">Actualizar Juego</MenuItem>
                 <MenuItem value="delete">Eliminar Juego</MenuItem>
               </Select>
             </FormControl>
+
+            {(operationType === 'update' || operationType === 'delete') && (
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Buscar por nombre"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+              />
+            )}
+
+            {((operationType === 'update' || operationType === 'delete') && matchingGames.length > 0) && (
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Selecciona un juego</InputLabel>
+                <Select
+                  value={game.id || ''}
+                  label="Selecciona un juego"
+                  onChange={handleGameSelect}
+                >
+                  {matchingGames.map((g) => (
+                    <MenuItem key={g.id} value={g.id}>
+                      {`${g.name} | ${g.platform}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+
+            {operationType === 'update' && (
+              <TextField
+                fullWidth
+                margin="normal"
+                label="ID del Juego"
+                value={game.id || ''}
+                InputProps={{ readOnly: true }}
+              />
+            )}
+
+            {operationType === 'delete' && (
+              <TextField
+                fullWidth
+                margin="normal"
+                label="ID del Juego"
+                value={game.id || ''}
+                onChange={handleChange('id')}
+                helperText="Este ID será usado para eliminar el juego"
+              />
+            )}
 
             {operationType !== 'delete' && (
               <>
@@ -143,17 +236,6 @@ export default function Operations() {
               </>
             )}
 
-            {operationType === 'delete' && (
-              <TextField
-                fullWidth
-                margin="normal"
-                label="ID del Juego"
-                value={game.id}
-                onChange={handleChange('id')}
-                helperText="Ingresa el ID del juego que deseas eliminar"
-              />
-            )}
-
             <Button
               type="submit"
               variant="contained"
@@ -170,4 +252,4 @@ export default function Operations() {
       </Card>
     </Box>
   );
-} 
+}

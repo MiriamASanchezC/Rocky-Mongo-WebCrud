@@ -1,4 +1,6 @@
+# ────────────────────────────────
 # Logs
+# ────────────────────────────────
 logs
 *.log
 npm-debug.log*
@@ -7,15 +9,39 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# ────────────────────────────────
+# Front-end artefacts
+# ────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+*.local          # archivos locales de Vite/React (ej. .local envs)
 
-# Editor directories and files
+# ────────────────────────────────
+# Back-end (Python / FastAPI)
+# ────────────────────────────────
+backend/venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/*.py[cod]
+
+# Si alguna vez tu venv queda afuera de /backend, ignórala también:
+venv/
+
+# ────────────────────────────────
+# Variables de entorno y secretos
+# ────────────────────────────────
+.env
+.env.*
+*.env
+
+# ────────────────────────────────
+# Directorios y archivos de editores/IDE
+# ────────────────────────────────
 .vscode/*
-!.vscode/extensions.json
-.idea
+!.vscode/extensions.json   # <- se mantiene la lista de extensiones recomendadas
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
