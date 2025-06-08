@@ -137,6 +137,8 @@ def get_summary():
     completados = [j for j in juegos if j.get("completed")]
     last_completed = max(completados, key=lambda j: j.get("lastPlayed", "1970-01-01"), default=None)
 
+# hola 
+
     return {
         "totalGames": total_games,
         "totalScore": total_score,
