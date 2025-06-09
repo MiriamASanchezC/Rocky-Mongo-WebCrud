@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Grid as MuiGrid, Typography, Avatar, Box } from '@mui/material';
-import { EmojiEvents, SportsEsports, Timeline } from '@mui/icons-material';
+import { Trophy, Gamepad2, TrendingUp, Clock, Star, Target } from 'lucide-react';
 import Hyperspeed from '../components/Hyperspeed';
 import PixelCard from '../components/PixelCard';
-
-const Grid = MuiGrid as any;
 
 interface Summary {
   totalGames: number;
@@ -21,19 +18,77 @@ interface Summary {
   inProgressCount: number;
 }
 
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: React.ReactNode;
+  variant: 'pink' | 'blue' | 'yellow' | 'green' | 'purple' | 'cyan';
+  isLoading?: boolean;
+}
+
+const StatCard = ({ title, value, subtitle, icon, variant, isLoading }: StatCardProps) => {
+  const iconClasses = {
+    pink: 'text-pink-400 bg-pink-500/20',
+    blue: 'text-blue-400 bg-blue-500/20',
+    yellow: 'text-yellow-400 bg-yellow-500/20',
+    green: 'text-green-400 bg-green-500/20',
+    purple: 'text-purple-400 bg-purple-500/20',
+    cyan: 'text-cyan-400 bg-cyan-500/20'
+  };
+
+  return (
+    <PixelCard variant={variant}>
+      <div className="absolute inset-0 p-6 flex flex-col h-full w-full text-white">
+        {/* Header con icono */}
+        <div className="flex items-center mb-4">
+          <div className={`p-3 rounded-xl ${iconClasses[variant]} backdrop-blur-sm`}>
+            {icon}
+          </div>
+          <h3 className="ml-3 text-lg font-semibold text-white/90">{title}</h3>
+        </div>
+
+        {/* Valor principal */}
+        <div className="mb-3 flex-1 flex items-center justify-center">
+          {isLoading ? (
+            <div className="h-12 bg-gray-700/50 rounded-lg animate-pulse w-full"></div>
+          ) : (
+            <span className="text-4xl font-bold text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              {value}
+            </span>
+          )}
+        </div>
+
+        {/* Subtítulo */}
+        <p className="text-sm text-gray-300 leading-relaxed text-center">
+          {subtitle}
+        </p>
+      </div>
+    </PixelCard>
+  );
+};
+
 export default function Dashboard() {
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetch('http://localhost:8000/api/summary')
       .then((res) => res.json())
-      .then((data) => setSummary(data))
-      .catch((err) => console.error('Error fetching summary:', err));
+      .then((data) => {
+        setSummary(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching summary:', err);
+        setIsLoading(false);
+      });
   }, []);
 
   return (
-    <>
-      <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1 }}>
+    <div className="relative min-h-full overflow-hidden">
+      {/* Fondo con efecto hyperspeed */}
+      <div className="absolute inset-0 z-0">
         <Hyperspeed
           effectOptions={{
             onSpeedUp: () => { },
@@ -74,82 +129,101 @@ export default function Dashboard() {
           }}
         />
       </div>
-      <Box 
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          px: 3,
-          width: '100%',
-          maxWidth: 'lg',
-          mx: 'auto',
-        }}
-      >
-        <Grid container spacing={3} mt={4} justifyContent="center">
-          <Grid item xs={12}>
-            <Typography variant="h4" gutterBottom sx={{ color: 'white' }}>
-              Mi Perfil 
-            </Typography>
-          </Grid>
 
-          <Grid item xs={12} md={6} lg={4}>
-            <PixelCard variant="pink">
-              <Box sx={{ position: 'absolute', p: 2, display: 'flex', flexDirection: 'column', height: '100%', width: '100%', color: 'white' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                    <EmojiEvents />
-                  </Avatar>
-                  <Typography variant="h6">Juegos Completados</Typography>
-                </Box>
-                <Typography variant="h3" sx={{ textAlign: 'center', my: 2 }}>
-                  {summary?.completedCount ?? '-'}
-                </Typography>
-                <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-                  Último juego completado: {summary?.lastCompleted?.name ?? 'N/A'}
-                </Typography>
-              </Box>
-            </PixelCard>
-          </Grid>
+      {/* Overlay gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 z-10"></div>
 
-          <Grid item xs={12} md={6} lg={4}>
-            <PixelCard variant="blue">
-              <Box sx={{ position: 'absolute', p: 2, display: 'flex', flexDirection: 'column', height: '100%', width: '100%', color: 'white' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Avatar sx={{ bgcolor: 'secondary.main', mr: 2 }}>
-                    <SportsEsports />
-                  </Avatar>
-                  <Typography variant="h6">Juegos en Progreso</Typography>
-                </Box>
-                <Typography variant="h3" sx={{ textAlign: 'center', my: 2 }}>
-                  {summary?.inProgressCount ?? '-'}
-                </Typography>
-                <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-                  Juego actual: {summary?.currentGame ?? 'N/A'}
-                </Typography>
-              </Box>
-            </PixelCard>
-          </Grid>
+      {/* Contenido principal */}
+      <div className="relative z-20 min-h-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="mb-12">
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">
+              Mi Perfil
+            </h1>
+            <div className="h-1 w-24 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"></div>
+          </div>
 
-          <Grid item xs={12} md={6} lg={4}>
-            <PixelCard variant="yellow">
-              <Box sx={{ position: 'absolute', p: 2, display: 'flex', flexDirection: 'column', height: '100%', width: '100%', color: 'white' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Avatar sx={{ bgcolor: 'success.main', mr: 2 }}>
-                    <Timeline />
-                  </Avatar>
-                  <Typography variant="h6">Puntaje Total</Typography>
-                </Box>
-                <Typography variant="h3" sx={{ textAlign: 'center', my: 2 }}>
-                  {summary?.totalScore ?? '-'}
-                </Typography>
-                <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
-                  Mejor puntaje: {summary?.bestScore ?? '-'} ({summary?.bestGame ?? 'N/A'})
-                </Typography>
-              </Box>
-            </PixelCard>
-          </Grid>
-        </Grid>
-      </Box>
-    </>
+          {/* Grid de estadísticas con PixelCard */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <StatCard
+              title="Juegos Completados"
+              value={summary?.completedCount ?? '-'}
+              subtitle={`Último completado: ${summary?.lastCompleted?.name ?? 'N/A'}`}
+              icon={<Trophy className="w-6 h-6" />}
+              variant="pink"
+              isLoading={isLoading}
+            />
+
+            <StatCard
+              title="Juegos en Progreso"
+              value={summary?.inProgressCount ?? '-'}
+              subtitle={`Actual: ${summary?.currentGame ?? 'N/A'}`}
+              icon={<Gamepad2 className="w-6 h-6" />}
+              variant="blue"
+              isLoading={isLoading}
+            />
+
+            <StatCard
+              title="Puntaje Total"
+              value={summary?.totalScore?.toLocaleString() ?? '-'}
+              subtitle={`Mejor: ${summary?.bestScore?.toLocaleString() ?? '-'} (${summary?.bestGame ?? 'N/A'})`}
+              icon={<TrendingUp className="w-6 h-6" />}
+              variant="yellow"
+              isLoading={isLoading}
+            />
+
+            <StatCard
+              title="Horas Jugadas"
+              value={summary?.totalHoursPlayed ?? '-'}
+              subtitle="Tiempo total invertido en gaming"
+              icon={<Clock className="w-6 h-6" />}
+              variant="green"
+              isLoading={isLoading}
+            />
+
+            <StatCard
+              title="Total de Juegos"
+              value={summary?.totalGames ?? '-'}
+              subtitle="Biblioteca completa de juegos"
+              icon={<Star className="w-6 h-6" />}
+              variant="purple"
+              isLoading={isLoading}
+            />
+
+            <StatCard
+              title="Ratio Completados"
+              value={summary ? `${Math.round((summary.completedCount / summary.totalGames) * 100)}%` : '-'}
+              subtitle="Porcentaje de juegos terminados"
+              icon={<Target className="w-6 h-6" />}
+              variant="cyan"
+              isLoading={isLoading}
+            />
+          </div>
+
+          {/* Información adicional */}
+          <div className="bg-gradient-to-r from-gray-900/50 to-black/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+              <TrendingUp className="w-6 h-6 mr-2 text-cyan-400" />
+              Resumen de Actividad
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+              <div>
+                <div className="text-3xl font-bold text-green-400">{summary?.completedCount || 0}</div>
+                <div className="text-gray-400">Juegos Completados</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-blue-400">{summary?.totalHoursPlayed || 0}</div>
+                <div className="text-gray-400">Horas Jugadas</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-orange-400">1</div>
+                <div className="text-gray-400">Plataformas</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

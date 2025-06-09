@@ -13,7 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = MongoClient("mongodb://localhost:27017")
+client = MongoClient("mongodb://129.158.216.122:27017")
 db = client["gamesDB"]
 collection = db["games"]
 
